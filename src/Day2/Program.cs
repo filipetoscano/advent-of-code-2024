@@ -3,6 +3,10 @@ var input = File.ReadAllText( fname );
 
 var safe = 0;
 
+
+/*
+ * Parse
+ */
 foreach ( var report in input.Split( "\n" ) )
 {
     if ( report.Trim().Length == 0 )

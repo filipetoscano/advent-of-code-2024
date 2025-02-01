@@ -41,7 +41,7 @@ for ( int i = 0; i < left.Count; i++ )
 }
 
 
-// Similiraty
+// Similarity
 var rightAgg = right.GroupBy( x => x ).ToDictionary( x => x.Key, x => x.Count() );
 
 for ( int i = 0; i < left.Count; i++ )
@@ -56,8 +56,7 @@ for ( int i = 0; i < left.Count; i++ )
 }
 
 
-
-// Outoutpu
+// Output
 Console.WriteLine( "L={0}", string.Join( " ", left ) );
 Console.WriteLine( "R={0}", string.Join( " ", right ) );
 Console.WriteLine( "D={0}", string.Join( " ", dist ) );
