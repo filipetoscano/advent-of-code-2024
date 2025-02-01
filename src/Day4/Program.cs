@@ -1,6 +1,4 @@
-﻿using System.Xml;
-
-var fname = args.Count() > 0 ? args[ 0 ] : "in.txt";
+﻿var fname = args.Count() > 0 ? args[ 0 ] : "in.txt";
 var input = File.ReadAllText( fname );
 
 var map = new List<Point<char>>();
@@ -18,7 +16,11 @@ foreach ( var row in input.Split( "\n", StringSplitOptions.RemoveEmptyEntries ).
     }
 }
 
-var sum = 0;
+
+/*
+ * XMAS sequence
+ */
+var sum1 = 0;
 
 foreach ( var p in map )
 {
@@ -37,15 +39,52 @@ foreach ( var p in map )
 
     var here = up + dn + rr + ll + ne + se + sw + nw;
 
-    if ( here > 0 )
-        Console.WriteLine( "{0} {1}: {2}", p.X, p.Y, here );
-    else
-        Console.WriteLine( "{0} {1}: none", p.X, p.Y );
+    //if ( here > 0 )
+    //    Console.WriteLine( "{0} {1}: {2}", p.X, p.Y, here );
+    //else
+    //    Console.WriteLine( "{0} {1}: none", p.X, p.Y );
 
-    sum += here;
+    sum1 += here;
 }
 
-Console.WriteLine( "Sum={0}", sum );
+
+/*
+ * 2x MAS sequences
+ */
+var sum2 = 0;
+
+foreach ( var p in map )
+{
+    if ( p.Value != 'A' )
+        continue;
+
+    var nw = map.At( p.X - 1, p.Y - 1 );
+    var ne = map.At( p.X + 1, p.Y - 1 );
+    var se = map.At( p.X + 1, p.Y + 1 );
+    var sw = map.At( p.X - 1, p.Y + 1 );
+
+    if ( nw == null || ne == null || se == null || sw == null )
+        continue;
+
+    var here = 0;
+
+    var d1 = ( nw.Value == 'M' && se.Value == 'S' ) || ( nw.Value == 'S' && se.Value == 'M' );
+    var d2 = ( ne.Value == 'M' && sw.Value == 'S' ) || ( ne.Value == 'S' && sw.Value == 'M' );
+
+    if ( d1 && d2 )
+        here++;
+
+    //if ( here > 0 )
+    //    Console.WriteLine( "{0} {1}: {2}", p.X, p.Y, here );
+    //else
+    //    Console.WriteLine( "{0} {1}: none", p.X, p.Y );
+
+    sum2 += here;
+}
+
+
+Console.WriteLine( "Sum XMAS={0}", sum1 );
+Console.WriteLine( "Sum X-MAS={0}", sum2 );
 
 
 int IsXmas( Point<char> point, Func<int, int> nextX, Func<int, int> nextY, int ix )
@@ -57,8 +96,6 @@ int IsXmas( Point<char> point, Func<int, int> nextX, Func<int, int> nextY, int i
 
     if ( next == null )
         return 0;
-
-    //Console.WriteLine( "{0}: {1} {2} {3}", ix, nx, ny, next.Value );
 
     if ( next.Value != "XMAS"[ ix ] )
         return 0;
