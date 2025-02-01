@@ -1,0 +1,19 @@
+# Generic
+/.nuget/
+/.vs/
+/artifacts/
+/build/
+/dist/
+/nupkg/
+/tmp/
+
+bin/
+obj/
+*.csproj.user
+
+!/bin/
+
+# Specific
+src/*/*.txt
+
+# eof
