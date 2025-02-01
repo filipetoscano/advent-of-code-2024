@@ -4,7 +4,10 @@ var input = File.ReadAllText( fname );
 var left = new List<int>();
 var right = new List<int>();
 var dist = new List<int>();
+var sim = new List<int>();
 
+
+// Parse
 foreach ( var l in input.Split( Environment.NewLine ) )
 {
     if ( l.Trim().Length == 0 )
@@ -22,10 +25,12 @@ foreach ( var l in input.Split( Environment.NewLine ) )
 left.Sort();
 right.Sort();
 
-for ( int i=0; i<left.Count; i++ )
+
+// Distance
+for ( int i = 0; i < left.Count; i++ )
 {
-    var lv = left[i];
-    var rv = right[i];
+    var lv = left[ i ];
+    var rv = right[ i ];
 
     var pd = lv - rv;
 
@@ -35,9 +40,31 @@ for ( int i=0; i<left.Count; i++ )
     dist.Add( pd );
 }
 
+
+// Similiraty
+var rightAgg = right.GroupBy( x => x ).ToDictionary( x => x.Key, x => x.Count() );
+
+for ( int i = 0; i < left.Count; i++ )
+{
+    var lv = left[ i ];
+    var rv = 0;
+
+    if ( rightAgg.ContainsKey( lv ) == true )
+        rv = rightAgg[ lv ];
+
+    sim.Add( lv * rv );
+}
+
+
+
+// Outoutpu
 Console.WriteLine( "L={0}", string.Join( " ", left ) );
 Console.WriteLine( "R={0}", string.Join( " ", right ) );
 Console.WriteLine( "D={0}", string.Join( " ", dist ) );
+Console.WriteLine( "S={0}", string.Join( " ", sim ) );
 
 var totalDist = dist.Sum();
+var totalSim = sim.Sum();
+
 Console.WriteLine( "TD={0}", totalDist );
+Console.WriteLine( "TS={0}", totalSim );
