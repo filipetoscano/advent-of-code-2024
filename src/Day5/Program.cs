@@ -1,117 +1,90 @@
 ﻿var fname = args.Count() > 0 ? args[ 0 ] : "in.txt";
 var input = File.ReadAllText( fname );
+var lines = input.Split( Environment.NewLine ).Select( x => x.Trim() ).ToList();
 
-var map = new List<Point<char>>();
+var ix = lines.IndexOf( "" );
+var part1 = lines.Take( ix );
+var part2 = lines.Skip( ix + 1 );
 
-foreach ( var row in input.Split( "\n", StringSplitOptions.RemoveEmptyEntries ).Select( x => x.Trim() ).WithIndex() )
+
+/*
+ * Rules
+ */
+var rules = new List<Rule>();
+
+foreach ( var l in part1 )
 {
-    foreach ( var col in row.Value.WithIndex() )
+    var ba = l.Split( "|" );
+
+    rules.Add( new Rule()
     {
-        map.Add( new Point<char>()
+        Before = int.Parse( ba[ 0 ] ),
+        After = int.Parse( ba[ 1 ] ),
+    } );
+}
+
+
+/*
+ * Page
+ */
+var mids = new List<int>();
+
+foreach ( var l in part2 )
+{
+    //Console.WriteLine();
+    //Console.WriteLine( "------" );
+    //Console.WriteLine( l );
+
+    var isValid = true;
+
+    var pages = l.Split( "," ).Select( x => int.Parse( x ) ).ToList();
+
+    foreach ( var p in pages.WithIndex() )
+    {
+        var pr = rules.Where( x => x.Before == p.Value ).Select( x => x.After ).ToList();
+
+        foreach ( var rule in pr )
         {
-            X = col.Index,
-            Y = row.Index,
-            Value = col.Value,
-        } );
+            //Console.WriteLine( "Page {0} must appear before {1}", p.Value, rule );
+
+            var rx = pages.IndexOf( rule );
+
+            if ( rx < 0 )
+            {
+                // Console.WriteLine( "wrn: Page {0} not found", rule );
+                continue;
+            }
+
+            if ( rx < p.Index )
+            {
+                //Console.WriteLine( "err: Page {0} appears at {1} < {2}", rule, rx, p.Index );
+                isValid = false;
+            }
+        }
     }
-}
 
-
-/*
- * XMAS sequence
- */
-var sum1 = 0;
-
-foreach ( var p in map )
-{
-    if ( p.Value != 'X' )
+    if ( isValid == false )
+    {
+        //Console.WriteLine( "invalid sequence" );
         continue;
+    }
 
-    var up = IsXmas( p, x => x + 0, y => y + 1, 1 );
-    var dn = IsXmas( p, x => x + 0, y => y - 1, 1 );
-    var rr = IsXmas( p, x => x + 1, y => y + 0, 1 );
-    var ll = IsXmas( p, x => x - 1, y => y + 0, 1 );
+    var skip = (int) pages.Count / 2;
+    var mid = pages.Skip( skip ).First();
 
-    var ne = IsXmas( p, x => x + 1, y => y + 1, 1 );
-    var se = IsXmas( p, x => x + 1, y => y - 1, 1 );
-    var sw = IsXmas( p, x => x - 1, y => y - 1, 1 );
-    var nw = IsXmas( p, x => x - 1, y => y + 1, 1 );
-
-    var here = up + dn + rr + ll + ne + se + sw + nw;
-
-    //if ( here > 0 )
-    //    Console.WriteLine( "{0} {1}: {2}", p.X, p.Y, here );
-    //else
-    //    Console.WriteLine( "{0} {1}: none", p.X, p.Y );
-
-    sum1 += here;
+    mids.Add( mid );
 }
 
 
-/*
- * 2x MAS sequences
- */
-var sum2 = 0;
+var midSum = mids.Sum();
 
-foreach ( var p in map )
+Console.WriteLine( "M={0}", string.Join( " ", mids ) );
+Console.WriteLine( "MS={0}", midSum );
+
+
+
+public class Rule
 {
-    if ( p.Value != 'A' )
-        continue;
-
-    var nw = map.At( p.X - 1, p.Y - 1 );
-    var ne = map.At( p.X + 1, p.Y - 1 );
-    var se = map.At( p.X + 1, p.Y + 1 );
-    var sw = map.At( p.X - 1, p.Y + 1 );
-
-    if ( nw == null || ne == null || se == null || sw == null )
-        continue;
-
-    var here = 0;
-
-    var d1 = ( nw.Value == 'M' && se.Value == 'S' ) || ( nw.Value == 'S' && se.Value == 'M' );
-    var d2 = ( ne.Value == 'M' && sw.Value == 'S' ) || ( ne.Value == 'S' && sw.Value == 'M' );
-
-    if ( d1 && d2 )
-        here++;
-
-    //if ( here > 0 )
-    //    Console.WriteLine( "{0} {1}: {2}", p.X, p.Y, here );
-    //else
-    //    Console.WriteLine( "{0} {1}: none", p.X, p.Y );
-
-    sum2 += here;
-}
-
-
-Console.WriteLine( "Sum XMAS={0}", sum1 );
-Console.WriteLine( "Sum X-MAS={0}", sum2 );
-
-
-int IsXmas( Point<char> point, Func<int, int> nextX, Func<int, int> nextY, int ix )
-{
-    var nx = nextX( point.X );
-    var ny = nextY( point.Y );
-
-    var next = map.At( nx, ny );
-
-    if ( next == null )
-        return 0;
-
-    if ( next.Value != "XMAS"[ ix ] )
-        return 0;
-
-    if ( ix == 3 )
-        return 1;
-
-    return IsXmas( next, nextX, nextY, ++ix );
-}
-
-
-public class Point<T>
-    where T : struct
-{
-    public int X { get; set; }
-    public int Y { get; set; }
-
-    public T Value { get; set; }
+    public int Before { get; set; }
+    public int After { get; set; }
 }
