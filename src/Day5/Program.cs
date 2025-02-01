@@ -1,4 +1,7 @@
-﻿var fname = args.Count() > 0 ? args[ 0 ] : "in.txt";
+﻿using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+
+var fname = args.Count() > 0 ? args[ 0 ] : "in.txt";
 var input = File.ReadAllText( fname );
 var lines = input.Split( Environment.NewLine ).Select( x => x.Trim() ).ToList();
 
@@ -10,81 +13,109 @@ var part2 = lines.Skip( ix + 1 );
 /*
  * Rules
  */
-var rules = new List<Rule>();
+var rules = new Dictionary<int, List<int>>();
 
 foreach ( var l in part1 )
 {
-    var ba = l.Split( "|" );
+    var lv = l.Split( "|" ).Select( x => int.Parse( x ) ).ToList();
 
-    rules.Add( new Rule()
-    {
-        Before = int.Parse( ba[ 0 ] ),
-        After = int.Parse( ba[ 1 ] ),
-    } );
+    var page = lv[ 0 ];
+    var before = lv[ 1 ];
+
+    if ( rules.ContainsKey( page ) == false )
+        rules.Add( page, new List<int>() );
+
+    rules[ page ].Add( before );
 }
+
+rules.Dump();
 
 
 /*
  * Page
  */
 var mids = new List<int>();
+var mods = new List<int>();
 
 foreach ( var l in part2 )
 {
-    //Console.WriteLine();
-    //Console.WriteLine( "------" );
-    //Console.WriteLine( l );
-
-    var isValid = true;
+    Console.WriteLine();
+    Console.WriteLine( "------" );
+    Console.WriteLine( l );
 
     var pages = l.Split( "," ).Select( x => int.Parse( x ) ).ToList();
 
-    foreach ( var p in pages.WithIndex() )
+    var outcome = "invalid";
+
+
+    /*
+     * 
+     */
+    if ( Validate( pages ) == true )
+        outcome = "valid:1";
+    else
     {
-        var pr = rules.Where( x => x.Before == p.Value ).Select( x => x.After ).ToList();
-
-        foreach ( var rule in pr )
-        {
-            //Console.WriteLine( "Page {0} must appear before {1}", p.Value, rule );
-
-            var rx = pages.IndexOf( rule );
-
-            if ( rx < 0 )
-            {
-                // Console.WriteLine( "wrn: Page {0} not found", rule );
-                continue;
-            }
-
-            if ( rx < p.Index )
-            {
-                //Console.WriteLine( "err: Page {0} appears at {1} < {2}", rule, rx, p.Index );
-                isValid = false;
-            }
-        }
+        //pages = ReorderPages( pages );
+        //outcome = "valid:2";
     }
 
-    if ( isValid == false )
-    {
-        //Console.WriteLine( "invalid sequence" );
+
+    /*
+     * 
+     */
+    if ( outcome == "invalid" )
         continue;
-    }
 
+
+    /*
+     * 
+     */
     var skip = (int) pages.Count / 2;
     var mid = pages.Skip( skip ).First();
 
-    mids.Add( mid );
+    if ( outcome == "valid:1" )
+        mids.Add( mid );
+    else
+        mods.Add( mid );
 }
 
 
 var midSum = mids.Sum();
+var modSum = mods.Sum();
 
 Console.WriteLine( "M={0}", string.Join( " ", mids ) );
 Console.WriteLine( "MS={0}", midSum );
 
+Console.WriteLine( "O={0}", string.Join( " ", mods ) );
+Console.WriteLine( "OS={0}", modSum );
 
 
-public class Rule
+/*
+ * 
+ */
+bool Validate( List<int> pages )
 {
-    public int Before { get; set; }
-    public int After { get; set; }
+    var pageIx = pages.WithIndex().ToDictionary( x => x.Value, x => x.Index );
+
+    foreach ( var p in pageIx )
+    {
+        if ( rules.ContainsKey( p.Key ) == false )
+            continue;
+
+        var ruleset = rules[ p.Key ];
+
+        foreach ( var nextPage in ruleset )
+        {
+            if ( pageIx.TryGetValue( nextPage, out var nextPageIx ) == false )
+                continue;
+
+            if ( p.Value > nextPageIx )
+            {
+                Console.WriteLine( "err: page {0}@{1} is before {2}@{3}", nextPage, nextPageIx, p.Key, p.Value );
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
